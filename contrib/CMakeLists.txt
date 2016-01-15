@@ -1,9 +1,14 @@
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+########################################################################## HDA
+message(STATUS  "partio/contrib/CMakeLists.txt : LEGACY_BUILD_MODE  = ${LEGACY_BUILD_MODE}")
+########################################################################## HDA
 
 if (LEGACY_BUILD_MODE)
     find_package(Arnold)
     find_package(Maya)
-    find_package(Houdini)
+    if (BUILD_PARTIO_HOUDINI)
+        find_package(Houdini)
+    endif ()
 else ()
     find_package(Partio)
     include_directories(${PARTIO_INCLUDE_DIR})

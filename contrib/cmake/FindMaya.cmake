@@ -34,6 +34,10 @@
 #  Output variables of the form MAYA_FOO
 #
 
+########################################################################## HDA
+message(STATUS "################## FindMaya.cmake ##################")
+########################################################################## HDA
+
 #=============================================================================
 # Macros
 #=============================================================================
@@ -87,7 +91,6 @@ macro(MAYA_SET_PLUGIN_PROPERTIES target)
             COMPILE_DEFINITIONS "${_maya_DEFINES}")
     endif()
 endmacro(MAYA_SET_PLUGIN_PROPERTIES)
-
 
 #SET(MAYA_FOUND FALSE)
 set(_maya_TEST_VERSIONS)

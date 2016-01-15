@@ -34,7 +34,12 @@
 include_directories(
    ${CMAKE_SOURCE_DIR}/src/lib
    ${GLUT_INCLUDE_PATH}
+   ${GLEW_INCLUDE_PATH}
 )
+
+########################################################################## HDA
+INCLUDE_DIRECTORIES(${GLEW_INCLUDE_DIR})
+########################################################################## HDA
 
 IF(GLUT_FOUND AND OPENGL_FOUND)
     INCLUDE_DIRECTORIES(${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})

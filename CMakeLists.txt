@@ -115,6 +115,7 @@ find_package(SWIG REQUIRED)
 
 ## Search for useful libraries
 find_package(GLUT REQUIRED)
+
 IF(GLUT_FOUND)
 	INCLUDE_DIRECTORIES( ${GLUT_INCLUDE_PATH} )
 	LINK_DIRECTORIES (${GLUT_ROOT_PATH}/lib/x64)
@@ -122,6 +123,12 @@ ELSE(GLUT_FOUND)
 	INCLUDE_DIRECTORIES( ${GLUT_INCLUDE_PATH} )
 	LINK_DIRECTORIES ( ${GLUT_LIBRARY_PATH} )
 ENDIF(GLUT_FOUND)
+
+################################################################################ HDA TMP
+message(STATUS  " partio/CMakeLists.txt : GLEW_INCLUDE_DIR  = ${GLEW_INCLUDE_DIR}")
+
+INCLUDE_DIRECTORIES( ${GLEW_INCLUDE_DIR} )
+################################################################################ HDA TMP
 
 find_package(OpenGL REQUIRED)
 
@@ -149,16 +156,20 @@ ENDIF()
 # make it so partio can be found
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src/lib )
 
-IF (PARTIO_NAMESPACE)
-	ADD_DEFINITIONS(-DPARTIO_NAMESPACE=${PARTIO_NAMESPACE})
-ENDIF ()
-
+########################################################################## HDA
+#SET (BUILD_PARTIO_LIBRARY 1)
+#SET (BUILD_PARTIO_MAYA 1)
+#SET (BUILD_PARTIO_MTOA 1)
+########################################################################## HDA
 SET (LEGACY_BUILD_MODE 1)
 
 IF (BUILD_PARTIO_LIBRARY OR BUILD_PARTIO_MAYA OR BUILD_PARTIO_MTOA OR BUILD_PARTIO_ARNOLD OR BUILD_PARTIO_HOUDINI)
 	SET (LEGACY_BUILD_MODE 0)
 ENDIF()
 
+########################################################################## HDA
+message(STATUS  "partio/CMakeLists.txt : LEGACY_BUILD_MODE  = ${LEGACY_BUILD_MODE}")
+########################################################################## HDA
 IF (LEGACY_BUILD_MODE)
 	ADD_SUBDIRECTORY (src/lib)
 	ADD_SUBDIRECTORY (src/tools)
@@ -168,11 +179,14 @@ IF (LEGACY_BUILD_MODE)
 	#ADD_SUBDIRECTORY (src/doc)
 	ADD_SUBDIRECTORY (contrib)
 ELSE (LEGACY_BUILD_MODE)
+	########################################################################## HDA
+	message(STATUS  "partio/CMakeLists.txt : BUILD_PARTIO_LIBRARY  = ${BUILD_PARTIO_LIBRARY}")
+	########################################################################## HDA
+
 	IF (BUILD_PARTIO_LIBRARY)
 		ADD_SUBDIRECTORY (src/lib)
 		ADD_SUBDIRECTORY (src/tools)
-		# Temp removal of the python bindings, have to figure out how to change the swig files
-		#ADD_SUBDIRECTORY (src/py)
+		ADD_SUBDIRECTORY (src/py)
 		ADD_SUBDIRECTORY (src/tests)
 	ENDIF (BUILD_PARTIO_LIBRARY)
 	#ADD_SUBDIRECTORY (src/houdini)

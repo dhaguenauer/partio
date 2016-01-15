@@ -1,6 +1,10 @@
 # - PartIO finder module
 # This module searches for a valid PartIO build.
 
+########################################################################## HDA
+message(STATUS  "################## FindPartio.cmake ################## : PASS" )
+########################################################################## HDA
+
 find_path(PARTIO_LIBRARY_DIR libpartio.a
     PATHS $ENV{PARTIO_HOME}/lib
     DOC "PartIO library path")
