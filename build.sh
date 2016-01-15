@@ -5,7 +5,7 @@ build_partio_arnold=1
 
 #mayaVersions=(2015.sp6 2016.sp4) #2014.sp4 do not build
 mayaVersions=(2015.sp6) #2014.sp4 do not build
-arnold_version='4.2.11.3'
+arnold_version='4.2.8.0'
 mtoa_version='1.2.5.0.14'
 compiler_path='/usr/bin/g++-4.6'
 
