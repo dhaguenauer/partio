@@ -29,6 +29,46 @@
 #include <maya/MHWGeometryUtilities.h>
 
 namespace {
+    const char* vertex_shader_code = "#version 110\n" \
+            "uniform mat4 world_view;\n" \
+            "uniform mat4 proj;\n" \
+            "void main(void) { gl_Position = proj * world_view * gl_Vertex; gl_FrontColor = gl_Color; gl_BackColor = gl_Color; }\n";
+    const char* pixel_shader_code = "#version 110\n" \
+            "void main(void) { gl_FragColor = gl_Color; }\n";
+
+    GLuint INVALID_GL_OBJECT = static_cast<GLuint>(-1);
+    GLuint vertex_shader = INVALID_GL_OBJECT;
+    GLuint pixel_shader = INVALID_GL_OBJECT;
+    GLuint shader_program = INVALID_GL_OBJECT;
+    GLint world_view_location = INVALID_GL_OBJECT;
+    GLint proj_location = INVALID_GL_OBJECT;
+
+    template <GLint shader_type>
+    bool create_shader(GLuint& shader, const char* shader_code)
+    {
+        shader = glCreateShader(shader_type);
+
+        GLint code_size = static_cast<GLint>(strlen(shader_code));
+        glShaderSource(shader, 1, &shader_code, &code_size);
+        glCompileShader(shader);
+        GLint success = 0;
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+        if (success == GL_FALSE)
+        {
+            std::cout << "[partioVisualizer] Error building shader : " << std::endl;
+            std::cout << shader_code << std::endl;
+            GLint max_length = 0;
+            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &max_length);
+            std::vector<GLchar> info_log(max_length);
+            glGetShaderInfoLog(shader, max_length, &max_length, &info_log[0]);
+            std::cout << &info_log[0] << std::endl;
+            glDeleteShader(shader); shader = INVALID_GL_OBJECT;
+            return false;
+        }
+        else
+            return true;
+    }
+
     // TODO: make partioVisualizer use the code from here
     struct DrawData : public MUserData {
     private:
@@ -38,6 +78,7 @@ namespace {
         int m_draw_style;
         float m_point_size;
         float m_default_alpha;
+        float m_icon_size;
 
         struct BillboardDrawData {
             std::vector<float> vertices;
@@ -50,27 +91,29 @@ namespace {
             }
         };
 
-        static void drawBillboardCircleAtPoint(const float* position, float radius, int drawType, BillboardDrawData& data)
+        static void drawBillboardCircleAtPoint(const float* position, float radius, int drawType, BillboardDrawData& data, const MMatrix& world_view_matrix)
         {
-            glPushMatrix();
-            glTranslatef(position[0], position[1], position[2]);
-            glMatrixMode(GL_MODELVIEW_MATRIX);
-            float m[16];
-            glGetFloatv(GL_MODELVIEW_MATRIX, m);
-            m[0] = 1.0f;
-            m[1] = 0.0f;
-            m[2] = 0.0f;
-            m[4] = 0.0f;
-            m[5] = 1.0f;
-            m[6] = 0.0f;
-            m[8] = 0.0f;
-            m[9] = 0.0f;
-            m[10] = 1.0f;
-            glLoadMatrixf(m);
+            static MMatrix world_view_source = MMatrix::identity;
+            world_view_source[3][0] = position[0];
+            world_view_source[3][1] = position[1];
+            world_view_source[3][2] = position[2];
+            static __thread float world_view[4][4];
+            (world_view_source * world_view_matrix).get(world_view);
+            world_view[0][0] = 1.0f;
+            world_view[0][1] = 0.0f;
+            world_view[0][2] = 0.0f;
+            world_view[1][0] = 0.0f;
+            world_view[1][1] = 1.0f;
+            world_view[1][2] = 0.0f;
+            world_view[2][0] = 0.0f;
+            world_view[2][1] = 0.0f;
+            world_view[2][2] = 1.0f;
+
+            MPoint world_view_pos = world_view_matrix * MPoint(position[0], position[1], position[2], 1.0);
+
+            glUniformMatrix4fv(world_view_location, 1, false, &world_view[0][0]);
 
             // TODO: setup radius using the scale of the Matrix
-            // also get rid of all this gl matrix tingamagic, and do it manually
-
             if (radius != data.last_radius)
             {
                 data.last_radius = radius;
@@ -169,7 +212,10 @@ namespace {
         }
     public:
         // attributes below are configured differently for VP1 and VP2
+        MBoundingBox m_cache_bbox;
+        MBoundingBox m_logo_bbox;
         float m_wireframe_color[4];
+        int m_draw_error;
 
         DrawData() : MUserData(false), p_reader_cache(0)
         {
@@ -187,9 +233,18 @@ namespace {
             m_draw_style = MPlug(m_object, partioVisualizer::aDrawStyle).asShort();
             m_point_size = MPlug(m_object, partioVisualizer::aPointSize).asFloat();
             m_default_alpha = MPlug(m_object, partioVisualizer::aDefaultAlpha).asFloat();
+            m_icon_size = MPlug(m_object, partioVisualizer::aSize).asFloat();
+
+            if (p_reader_cache)
+                m_cache_bbox = p_reader_cache->bbox;
+
+            static const MBoundingBox logo_bbox = partio4Maya::partioLogoBoundingBox();
+            m_logo_bbox.clear();
+            m_logo_bbox.expand(logo_bbox.min() * m_icon_size);
+            m_logo_bbox.expand(logo_bbox.max() * m_icon_size);
         }
 
-        void draw(bool as_bounding_box = false) const
+        void draw(bool as_bounding_box, const MMatrix& world_view_matrix) const
         {
             if (p_reader_cache == 0 || p_reader_cache->particles == 0 || p_reader_cache->positionAttr.attributeIndex == -1)
                 return;
@@ -245,10 +300,20 @@ namespace {
                     {
                         glColor4fv(&p_reader_cache->rgba[i * 4]);
                         const float* partioPositions = p_reader_cache->particles->data<float>(p_reader_cache->positionAttr, i);
-                        drawBillboardCircleAtPoint(partioPositions, p_reader_cache->radius[i], m_draw_style, billboard_data);
+                        drawBillboardCircleAtPoint(partioPositions, p_reader_cache->radius[i], m_draw_style, billboard_data, world_view_matrix);
                     }
+
+                    glDisableClientState(GL_VERTEX_ARRAY);
+                    glDisableClientState(GL_COLOR_ARRAY);
                 }
             }
+
+            return;
+        }
+
+        void draw_icon() const
+        {
+            partio4Maya::drawPartioLogo(m_icon_size);
         }
     };
 }
@@ -266,11 +331,7 @@ namespace MHWRender {
         MStatus status;
         MFnDependencyNode dnode(m_object, &status);
         if (status)
-        {
             p_visualizer = dynamic_cast<partioVisualizer*>(dnode.userNode());
-            if (p_visualizer)
-                m_bbox = p_visualizer->updateParticleCache()->bbox;
-        }
     }
 
     partioVisualizerDrawOverride::~partioVisualizerDrawOverride()
@@ -282,28 +343,73 @@ namespace MHWRender {
     {
         const DrawData* draw_data = reinterpret_cast<const DrawData*>(data);
 
-        if (draw_data == 0)
+        if (draw_data == 0 || shader_program == INVALID_GL_OBJECT)
+            return;
+
+        const bool draw_bounding_box = context.getDisplayStyle() & MHWRender::MFrameContext::kBoundingBox;
+
+        bool draw_cache = true;
+        bool draw_logo = true;
+        MStatus status;
+        MBoundingBox frustrum_box = context.getFrustumBox(&status);
+        if (status)
+        {
+            if (!frustrum_box.intersects(draw_data->m_cache_bbox))
+                draw_cache = false;
+            if (draw_bounding_box || !frustrum_box.intersects(draw_data->m_logo_bbox))
+                draw_logo = false;
+        }
+
+        if (!(draw_logo || draw_cache))
             return;
 
         glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
         float world_view[4][4];
-        context.getMatrix(MHWRender::MDrawContext::kWorldViewMtx).get(world_view);
+        MMatrix world_view_matrix = context.getMatrix(MHWRender::MDrawContext::kWorldViewMtx);
+        world_view_matrix.get(world_view);
+        float proj[4][4];
+        context.getMatrix(MHWRender::MDrawContext::kProjectionMtx).get(proj);
 
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadMatrixf(&world_view[0][0]);
+        GLint current_program = 0;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &current_program);
 
-        glUseProgram(0);
+        glUseProgram(shader_program);
 
-        draw_data->draw(context.getDisplayStyle() & MHWRender::MFrameContext::kBoundingBox);
+        glUniformMatrix4fv(world_view_location, 1, false, &world_view[0][0]);
+        glUniformMatrix4fv(proj_location, 1, false, &proj[0][0]);
 
-        glPopMatrix();
+        draw_data->draw(draw_bounding_box, world_view_matrix);
+
+        if (draw_logo)
+        {
+            if (draw_data->m_draw_error == 0)
+                glColor3fv(draw_data->m_wireframe_color);
+            if (draw_data->m_draw_error == 1)
+                glColor3f(.75f, 0.0f, 0.0f);
+            else if (draw_data->m_draw_error == 2)
+                glColor3f(0.0f, 0.0f, 0.0f);
+
+            draw_data->draw_icon();
+        }
+
+        glUseProgram(current_program);
+
+        glPopClientAttrib();
         glPopAttrib();
     }
 
     MBoundingBox partioVisualizerDrawOverride::boundingBox(const MDagPath& objPath, const MDagPath& cameraPath) const
     {
-        return m_bbox;
+        return MBoundingBox();
+    }
+
+    bool partioVisualizerDrawOverride::isBounded(const MDagPath& objPath, const MDagPath& cameraPath) const
+    {
+        // the cache and the bounding box can change at any time
+        // plus calling the prepareForDraw also updates the data, so we always have to draw
+        // then manually do the frustum culling in the draw function
+        return false;
     }
 
     MUserData* partioVisualizerDrawOverride::prepareForDraw(const MDagPath& objPath, const MDagPath& cameraPath,
@@ -314,14 +420,76 @@ namespace MHWRender {
         {
             // TODO: debate if the the bbox queries should be moved to the bounding box function
             partioVizReaderCache* p_cache = p_visualizer->updateParticleCache();
-            m_bbox = p_cache->bbox;
             draw_data->update_data(m_object, p_cache);
             MColor color = MHWRender::MGeometryUtilities::wireframeColor(objPath);
             draw_data->m_wireframe_color[0] = color.r;
             draw_data->m_wireframe_color[1] = color.g;
             draw_data->m_wireframe_color[2] = color.b;
             draw_data->m_wireframe_color[3] = color.a;
+            draw_data->m_draw_error = p_visualizer->drawError;
         }
         return draw_data;
+    }
+
+    DrawAPI partioVisualizerDrawOverride::supportedDrawAPIs() const
+    {
+#if MAYA_API_VERSION >= 201600
+        return kOpenGL | kOpenGLCoreProfile;
+#else
+        return kOpenGL;
+#endif
+    }
+
+    void partioVisualizerDrawOverride::init_shaders()
+    {
+
+        if (!create_shader<GL_VERTEX_SHADER>(vertex_shader, vertex_shader_code))
+            return;
+        if (!create_shader<GL_FRAGMENT_SHADER>(pixel_shader, pixel_shader_code))
+        {
+            glDeleteShader(vertex_shader); vertex_shader = INVALID_GL_OBJECT;
+            return;
+        }
+
+        shader_program = glCreateProgram();
+
+        glAttachShader(shader_program, vertex_shader);
+        glAttachShader(shader_program, pixel_shader);
+        glLinkProgram(shader_program);
+
+        GLint success = 0;
+        glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+        if (success == GL_FALSE)
+        {
+            std::cout << "[partioVisualizer] Error linking shader." << std::endl;
+
+            GLint max_length = 0;
+            glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &max_length);
+            std::vector<GLchar> info_log(max_length);
+            glGetProgramInfoLog(shader_program, max_length, &max_length, &info_log[0]);
+
+            std::cout << &info_log[0] << std::endl;
+
+            glDeleteShader(vertex_shader); vertex_shader = INVALID_GL_OBJECT;
+            glDeleteShader(pixel_shader); pixel_shader = INVALID_GL_OBJECT;
+            glDeleteProgram(shader_program); shader_program = INVALID_GL_OBJECT;
+            return;
+        }
+
+        glDetachShader(shader_program, vertex_shader);
+        glDetachShader(shader_program, pixel_shader);
+
+        world_view_location = glGetUniformLocation(shader_program, "world_view");
+        proj_location = glGetUniformLocation(shader_program, "proj");
+    }
+
+    void partioVisualizerDrawOverride::free_shaders()
+    {
+        if (vertex_shader != INVALID_GL_OBJECT)
+            glDeleteShader(vertex_shader);
+        if (pixel_shader != INVALID_GL_OBJECT)
+            glDeleteShader(pixel_shader);
+        if (shader_program != INVALID_GL_OBJECT)
+            glDeleteProgram(shader_program);
     }
 }

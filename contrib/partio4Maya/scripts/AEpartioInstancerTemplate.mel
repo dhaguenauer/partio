@@ -31,13 +31,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 global proc AEpartioInstancerTemplate( string $nodeName )
 {
     editorTemplate -callCustom pioInstLogoHeader pioInstLogoHeader $nodeName;
+
+    editorTemplate -beginScrollLayout;
+
     editorTemplate -beginLayout "Global" -collapse 0;
     editorTemplate -addControl "cacheActive";
     editorTemplate -addControl "staticCache";
     //editorTemplate -addControl "flipYZ";
     editorTemplate -addControl "computeVeloPos";
     editorTemplate -addControl "velocitySource";
+    editorTemplate -addControl "angularVelocitySource";
     editorTemplate -addControl -l "Velocity Mult" "veloMult";
+    editorTemplate -addControl -l "Angular Velocity Mult" "angVeloMult";
     editorTemplate -callCustom pioAEoutpathNew pioAEoutpathReplace cacheDir;
     editorTemplate -addControl "cachePrefix";
     editorTemplate -addControl "cacheOffset";
@@ -47,8 +52,6 @@ global proc AEpartioInstancerTemplate( string $nodeName )
     editorTemplate -callCustom pioInstForceUpdate pioInstForceUpdate $nodeName;
 
     editorTemplate -endLayout;
-
-    editorTemplate -beginScrollLayout;
 
         editorTemplate -beginLayout "General Parameters" -collapse 0;
             editorTemplate -addControl "pointSize";
@@ -131,10 +134,10 @@ global proc pioInstCustomAttrsManage (string $nodeName)
     ///  General attrs
     frameLayout -collapse 0 -collapsable 0 -borderVisible 0 -w 450 -l "General Channels" ;
     /// SCALE
-        columnLayout;
-        string $scaleAttributes[] = {"scaleFrom"};
-        string $scaleLabels[] = {"Scale"};
-        generateAttributesMenu($nodeName, $attrNameList, $scaleLabels, $scaleAttributes);
+    columnLayout;
+    string $scaleAttributes[] = {"scaleFrom"};
+    string $scaleLabels[] = {"Scale"};
+    generateAttributesMenu($nodeName, $attrNameList, $scaleLabels, $scaleAttributes);
     setParent ..;
     setParent ..;
     /// ROTATION stuff
@@ -150,6 +153,7 @@ global proc pioInstCustomAttrsManage (string $nodeName)
 
     ///  INDEX
     frameLayout -collapse 0 -collapsable 0 -borderVisible 0 -w 450 -l "Index Channels" ;
+    columnLayout;
     string $indexAttributes[] = {"indexFrom"};
     string $indexLabels[] = {"Index"};
     generateAttributesMenu($nodeName, $attrNameList, $indexLabels, $indexAttributes);
@@ -159,8 +163,8 @@ global proc pioInstCustomAttrsManage (string $nodeName)
     /// LAST ATTRIBUTES
     frameLayout -collapse 1 -collapsable 1 -borderVisible 0 -w 450 -l "Motion blur Channels (if left blank they will inherit above channels)" ;
     columnLayout;
-    string $lastAttributes[] = {"velocityFrom", "lastPositionFrom", "lastRotationFrom", "lastAimDirectionFrom", "lastAimPositionFrom"};
-    string $lastLabels[] = {"Velocity", "Last Position", "Last Rotation", "Last Aim Direction", "Last Aim Position"};
+    string $lastAttributes[] = {"velocityFrom", "lastPositionFrom", "angularVelocityFrom", "lastRotationFrom", "lastAimDirectionFrom", "lastAimPositionFrom"};
+    string $lastLabels[] = {"Velocity", "Last Position", "Angular Velocity", "Last Rotation", "Last Aim Direction", "Last Aim Position"};
     generateAttributesMenu($nodeName, $attrNameList, $lastLabels, $lastAttributes);
     setParent ..;
     setParent ..;

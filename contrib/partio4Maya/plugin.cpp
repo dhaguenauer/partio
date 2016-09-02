@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #include "partioEmitter.h"
 #include "partioExport.h"
 #include "partioImport.h"
-#include "partioVisualizerGeometryOverride.h"
 #include "partioVisualizerDrawOverride.h"
 #include <maya/MFnPlugin.h>
 #include <maya/MDrawRegistry.h>
@@ -43,7 +42,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 MStatus initializePlugin ( MObject obj )
 {
     if (MGlobal::mayaState() == MGlobal::kInteractive)
-        glewInit();
+    {
+        MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
+        if (renderer != 0 && renderer->drawAPIIsOpenGL())
+        {
+            glewInit();
+            MHWRender::partioVisualizerDrawOverride::init_shaders();
+        }
+    }
+
     // source  mel scripts this way if they're missing from the script path it will alert the user...
     MGlobal::executeCommand("source AEpartioEmitterTemplate.mel");
     MGlobal::executeCommand("source AEpartioVisualizerTemplate.mel");
@@ -65,18 +72,6 @@ MStatus initializePlugin ( MObject obj )
         status.perror("registerNode partioVisualizer failed");
         return status;
     }
-
-    /*status = MHWRender::MDrawRegistry::registerGeometryOverrideCreator(
-            partioVisualizer::drawDbClassification,
-            MHWRender::partioVisualizerGeometryOverride::registrantId,
-            MHWRender::partioVisualizerGeometryOverride::creator
-    );
-
-    if (!status)
-    {
-        status.perror("registerGeometryOverride partioVisualizerOverride failed");
-        return status;
-    }*/
 
     status = MHWRender::MDrawRegistry::registerDrawOverrideCreator(
             partioVisualizer::drawDbClassification,
@@ -127,6 +122,9 @@ MStatus initializePlugin ( MObject obj )
 
 MStatus uninitializePlugin ( MObject obj )
 {
+    if (MGlobal::mayaState() == MGlobal::kInteractive)
+        MHWRender::partioVisualizerDrawOverride::free_shaders();
+
     MStatus status;
     MFnPlugin plugin ( obj );
 
@@ -156,16 +154,6 @@ MStatus uninitializePlugin ( MObject obj )
         status.perror("deregisterNode partioInstancer failed");
         return status;
     }
-
-    /*status = MHWRender::MDrawRegistry::deregisterGeometryOverrideCreator(
-            partioVisualizer::drawDbClassification,
-            MHWRender::partioVisualizerGeometryOverride::registrantId);
-
-    if (!status)
-    {
-        status.perror("deregisterGeometryOverride partioVisualizerOverride failed");
-        return status;
-    }*/
 
     status = MHWRender::MDrawRegistry::deregisterDrawOverrideCreator(
             partioVisualizer::drawDbClassification,

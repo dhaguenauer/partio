@@ -85,7 +85,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #include <PartioIterator.h>
 
 #include "partio4MayaShared.h"
-#include "iconArrays.h"
 
 enum {
 	PARTIO_DRAW_STYLE_POINTS = 0,
@@ -102,12 +101,12 @@ public:
     partioVizReaderCache();
 	void clear();
     MBoundingBox bbox;
-    Partio::ParticlesDataMutable* particles;
-    Partio::ParticleAttribute positionAttr;
-    Partio::ParticleAttribute colorAttr;
-    Partio::ParticleAttribute opacityAttr;
-    Partio::ParticleAttribute radiusAttr;
-	Partio::ParticleAttribute incandescenceAttr;
+    PARTIO::ParticlesDataMutable* particles;
+    PARTIO::ParticleAttribute positionAttr;
+    PARTIO::ParticleAttribute colorAttr;
+    PARTIO::ParticleAttribute opacityAttr;
+    PARTIO::ParticleAttribute radiusAttr;
+	PARTIO::ParticleAttribute incandescenceAttr;
     std::vector<float> rgba;
     std::vector<float> radius;
 };

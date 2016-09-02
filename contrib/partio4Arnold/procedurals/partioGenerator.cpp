@@ -3,13 +3,13 @@
 /// by John Cassella (redpawfx)  for  Luma Pictures  (c) 2013
 
 #include <ai.h>
+#include <cstring>
 #include <Partio.h>
 #include <PartioAttribute.h>
 #include <PartioIterator.h>
 
 #include <sstream>
 #include <iostream>
-#include <cstring>
 #include <cstdlib>
 #include <string>
 #include <utility>
@@ -58,16 +58,16 @@ void getParam<AtRGB>(AtRGB& param, AtNode* node, const char* paramName)
 }
 
 struct PartioData {
-    Partio::ParticlesData* points;
+    PARTIO::ParticlesData* points;
     AtNode* mynode;
 
-    Partio::ParticleAttribute positionAttr;
-    Partio::ParticleAttribute velocityAttr;
-    Partio::ParticleAttribute accelerationAttr;
-    Partio::ParticleAttribute rgbAttr;
-    Partio::ParticleAttribute opacityAttr;
-    Partio::ParticleAttribute radiusAttr;
-    Partio::ParticleAttribute incandAttr;
+    PARTIO::ParticleAttribute positionAttr;
+    PARTIO::ParticleAttribute velocityAttr;
+    PARTIO::ParticleAttribute accelerationAttr;
+    PARTIO::ParticleAttribute rgbAttr;
+    PARTIO::ParticleAttribute opacityAttr;
+    PARTIO::ParticleAttribute radiusAttr;
+    PARTIO::ParticleAttribute incandAttr;
 
     std::string arg_velFrom;
     std::string arg_accFrom;
@@ -133,8 +133,8 @@ struct PartioData {
         hasOpacPP = false;
         hasIncandPP = false;
 
-        positionAttr.type = Partio::NONE;
-        accelerationAttr.type = Partio::NONE;
+        positionAttr.type = PARTIO::NONE;
+        accelerationAttr.type = PARTIO::NONE;
     }
 
     ~PartioData()
@@ -177,7 +177,7 @@ struct PartioData {
         if (partioCacheExists(arg_file))
         {
             cacheExists = true;
-            points = Partio::read(arg_file.c_str());
+            points = PARTIO::read(arg_file.c_str());
             if (points)
                 return true;
             else
@@ -272,13 +272,14 @@ struct PartioData {
                 rad = CLAMP(rad, arg_minParticleRadius, arg_maxParticleRadius);
 
                 // According to Thiago Ize, we have to filter particles
-                // where the ratio of the position form the origin
+                // where the ratio of the position from the origin
                 // and radius is bigger than 10^7
                 if ((AiV3Length(position) / rad) > filterSmallParticles)
                     continue;
 
                 //AiArraySetFlt(radarr , i, rad);
-                radiiVector.push_back(rad);
+                if (hasRadiusPP)
+                    radiiVector.push_back(rad);
                 pointsVector.push_back(position);
                 validPointsVector.push_back(i);
             }
@@ -303,14 +304,15 @@ struct PartioData {
         /// Velocity
         if ((global_motionBlurSteps > 1) && (arg_velFrom.length() > 0) && (points->attributeInfo(arg_velFrom.c_str(), velocityAttr) ||
             points->attributeInfo("velocity", velocityAttr) || points->attributeInfo("Velocity", velocityAttr)) && (velocityAttr.count > 2) &&
-            (velocityAttr.type == Partio::FLOAT))
+            (velocityAttr.type == PARTIO::FLOAT || velocityAttr.type == PARTIO::VECTOR))
         {
             AiMsgInfo("[partioGenerator] found velocity attr, motion blur is a GO!!");
             canMotionBlur = true;
 
             ////////////////////
             /// Acceleration
-            if (points->attributeInfo(arg_accFrom.c_str(), accelerationAttr) && (accelerationAttr.count > 2) && (accelerationAttr.type == Partio::FLOAT))
+            if (points->attributeInfo(arg_accFrom.c_str(), accelerationAttr) && (accelerationAttr.count > 2) &&
+                                      (accelerationAttr.type == PARTIO::FLOAT || accelerationAttr.type == PARTIO::VECTOR))
             {
                 AiMsgInfo("[partioGenerator] found acceleration attr, motion blur is a GO!!");
                 canMotionBlur = true;
@@ -363,7 +365,7 @@ struct PartioData {
             AiNodeSetFlt(currentInstance, "opacityPP", arg_defaultOpac);
         }
 
-        const bool can_accelerate = accelerationAttr.type != Partio::NONE;
+        const bool can_accelerate = accelerationAttr.type != PARTIO::NONE;
 
         if (canMotionBlur)
         {
@@ -385,7 +387,7 @@ struct PartioData {
 
 
         // now parse and include any extra attrs
-        std::vector<Partio::ParticleAttribute> extraAttrs;
+        std::vector<PARTIO::ParticleAttribute> extraAttrs;
         std::vector<AtArray*> arnoldArrays;
 
         char extraAttrStr[1000];
@@ -395,7 +397,7 @@ struct PartioData {
         parts[index] = strtok(extraAttrStr, " ");
         while (parts[index] != 0)
         {
-            Partio::ParticleAttribute user;
+            PARTIO::ParticleAttribute user;
             if (points->attributeInfo(parts[index], user))
             {
                 // we don't want to double export these 
@@ -406,13 +408,13 @@ struct PartioData {
                     user.name != "opacityPP" &&
                     user.name != "radiusPP")
                 {
-                    if (user.type == Partio::FLOAT || user.count == 1)
+                    if (user.type == PARTIO::FLOAT && user.count == 1)
                     {
                         AiNodeDeclare(currentInstance, parts[index], "uniform Float");
                         floatArr = AiArrayAllocate(pointCount, 1, AI_TYPE_FLOAT);
                         arnoldArrays.push_back(floatArr);
                     }
-                    else if (user.type == Partio::VECTOR || user.count == 3)
+                    else if (user.type == PARTIO::VECTOR || (user.type == PARTIO::FLOAT && user.count == 3))
                     {
                         AiNodeDeclare(currentInstance, parts[index], "uniform Vector");
                         vecArr = AiArrayAllocate(pointCount, 1, AI_TYPE_VECTOR);
@@ -441,6 +443,8 @@ struct PartioData {
                 motion_step_times[st] = static_cast<float>(-0.5 + ((double)st / ((double)global_motionBlurSteps - 1.0))) * motion_blur_time;
             }
         }
+
+        AiMsgDebug("[partioGenerator] about to final loop thru the particles");
 
         ///////////////////////////////////////////////
         /// LOOP particles
@@ -533,40 +537,57 @@ struct PartioData {
             }
             for (size_t x = 0; x < extraAttrs.size(); ++x)
             {
-                if (extraAttrs[x].type == Partio::FLOAT)
+                if (extraAttrs[x].type == PARTIO::FLOAT && extraAttrs[x].count == 1)
                 {
 
                     const float* partioFLOAT = points->data<float>(extraAttrs[x], id);
                     float floatVal = partioFLOAT[0];
                     AiArraySetFlt(arnoldArrays[x], i, floatVal);
                 }
-                else if (extraAttrs[x].type == Partio::VECTOR)
+                else if (extraAttrs[x].type == PARTIO::VECTOR || (extraAttrs[x].type == PARTIO::FLOAT && extraAttrs[x].count == 3))
                 {
                     const float* partioVEC = points->data<float>(extraAttrs[x], id);
                     AtVector vecVal;
                     vecVal.x = partioVEC[0];
-                    vecVal.y = partioVEC[0];
-                    vecVal.z = partioVEC[0];
+                    vecVal.y = partioVEC[1];
+                    vecVal.z = partioVEC[2];
                     AiArraySetVec(arnoldArrays[x], i, vecVal);
                 }
             }
         } // for loop per particle
 
+        AiMsgDebug("[partioGenerator] Done looping thru particles");
 
         if (hasRgbPP)
+        {
             AiNodeSetArray(currentInstance, "rgbPP", rgbArr);
+            AiMsgDebug("[partioGenerator] rgbPP array set");
+        }
+
         if (hasIncandPP)
+        {
             AiNodeSetArray(currentInstance, "incandescencePP", incandArr);
+            AiMsgDebug("[partioGenerator] incandescencePP array set");
+        }
+
         if (hasOpacPP)
+        {
             AiNodeSetArray(currentInstance, "opacityPP", opacityArr);
+            AiMsgDebug("[partioGenerator] OpacityPP array set");
+        }
 
         AiNodeSetArray(currentInstance, "radius", radarr);
+        AiMsgDebug("[partioGenerator] radiusPP array set");
 
         for (size_t x = 0; x < arnoldArrays.size(); ++x)
+        {
             AiNodeSetArray(currentInstance, extraAttrs[x].name.c_str(), arnoldArrays[x]);
+            AiMsgDebug("[partioGenerator] %s array set", extraAttrs[x].name.c_str() );
+        }
 
         /// these  will always be here
         AiNodeSetArray(currentInstance, "points", pointarr);
+        AiMsgDebug("[partioGenerator] Points array set with %i points", pointarr->nelements );
         //AiNodeSetArray ( currentInstance, "position",pointarr );  // we want to enable this when they fix some stuff on particles
 
         AiNodeSetInt(currentInstance, "mode", arg_renderType);
@@ -575,6 +596,7 @@ struct PartioData {
         if (arg_stepSize > 0.0f)
             AiNodeSetFlt(currentInstance, "step_size", arg_stepSize);
 
+        AiMsgDebug("[partioGenerator] Done with partioGeneration! ");
         return currentInstance;
     }
 
