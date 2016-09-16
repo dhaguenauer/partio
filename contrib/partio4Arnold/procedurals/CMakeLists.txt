@@ -19,6 +19,11 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(PLUGIN_NAME "partioGenerator")
 set(CMAKE_PROJECT_NAME "partioGenerator")
 
+# HDA
+MESSAGE( STATUS "@@@@@@@@@@@@@@@@@@@    CMakeLists.txt partioArnold/procedural")
+MESSAGE(${PLUGIN_NAME})
+
+
 if (APPLE)
     set(PLUGIN_SUFFIX ".bundle")
     set(CMAKE_SHARED_LIBRARY_SUFFIX ".bundle")

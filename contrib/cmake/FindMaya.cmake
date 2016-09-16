@@ -212,32 +212,78 @@ message(STATUS "Maya Location: ${MAYA_LOCATION}")
 message(STATUS "Maya VERSION: ${MAYA_VERSION}")
 SET(MAYA_FOUND TRUE)
 
-find_path(MAYA_INCLUDE_DIR maya/MFn.h
-    HINTS ${MAYA_LOCATION}
-    PATH_SUFFIXES
-        include               # linux and windows
-        ../../devkit/include  # osx
-    DOC "Maya's include path")
+#find_path(MAYA_INCLUDE_DIR maya/MFn.h
+#    HINTS ${MAYA_LOCATION}
+#    PATH_SUFFIXES
+#        include               # linux and windows
+#        ../../devkit/include  # osx
+#    DOC "Maya's include path")
+#
+#LIST(APPEND MAYA_INCLUDE_DIRS ${MAYA_INCLUDE_DIR})
 
-LIST(APPEND MAYA_INCLUDE_DIRS ${MAYA_INCLUDE_DIR})
+
+##################### HDA MODIF #####################
+#FIND_PATH(MAYA_DEVKIT_INC_DIR GL/glext.h
+#  HINTS
+#    ${MAYA_LOCATION}
+#  PATH_SUFFIXES
+#	devkit/plug-ins/   # linux
+#	../../devkit/plug-ins   # osx
+#  DOC "Maya's devkit headers path"
+#)
+#LIST(APPEND MAYA_INCLUDE_DIRS ${MAYA_DEVKIT_INC_DIR})
+#
+#
+#find_path(MAYA_LIBRARY_DIRS libOpenMaya.dylib libOpenMaya.so OpenMaya.lib
+#    HINTS ${MAYA_LOCATION}
+#    PATH_SUFFIXES
+#        lib    # linux and windows
+#        MacOS  # osx
+#    DOC "Maya's library path")
+
+
+MESSAGE( STATUS " FindMaya HDA ####  MAYA_API_LOCATION :              " $ENV{MAYA_API_LOCATION} )
+
 
 FIND_PATH(MAYA_DEVKIT_INC_DIR GL/glext.h
   HINTS
-    ${MAYA_LOCATION}
+    $ENV{MAYA_API_LOCATION}
   PATH_SUFFIXES
-	devkit/plug-ins/   # linux
-	../../devkit/plug-ins   # osx
+    devkit/plug-ins/   # linux
+    ../../devkit/plug-ins   # osx
   DOC "Maya's devkit headers path"
 )
-LIST(APPEND MAYA_INCLUDE_DIRS ${MAYA_DEVKIT_INC_DIR})
+
+FIND_PATH(MAYA_INC_DIR devkit
+  HINTS
+    $ENV{MAYA_API_LOCATION}
+  DOC "Maya's devkit headers path"
+)
+
+MESSAGE( STATUS "FindMaya HDA ####  MAYA_INC_DIR :          " ${MAYA_INC_DIR} )
+
+
+LIST(APPEND MAYA_INCLUDE_DIRS  ${MAYA_DEVKIT_INC_DIR})
+LIST(APPEND MAYA_INCLUDE_DIRS  ${MAYA_INC_DIR}/include)
+
+
+MESSAGE( STATUS "FindMaya HDA ####  MAYA_DEVKIT_INC_DIR :          " ${MAYA_DEVKIT_INC_DIR} )
+MESSAGE( STATUS "FindMaya HDA ####  MAYA_INCLUDE_DIRS :            " ${MAYA_INCLUDE_DIRS} )
+MESSAGE( STATUS "FindMaya HDA ####  MAYA_INCLUDE_DIRS :            " ${MAYA_INCLUDE_DIRS} )
+
+
+#message( FATAL_ERROR " HDA DEBUG ..." )
 
 
 find_path(MAYA_LIBRARY_DIRS libOpenMaya.dylib libOpenMaya.so OpenMaya.lib
-    HINTS ${MAYA_LOCATION}
+    HINTS $ENV{MAYA_API_LOCATION}
     PATH_SUFFIXES
         lib    # linux and windows
         MacOS  # osx
     DOC "Maya's library path")
+
+
+
 
 # Set deprecated variables to avoid compatibility breaks
 set(MAYA_INCLUDE_DIR ${MAYA_INCLUDE_DIRS})

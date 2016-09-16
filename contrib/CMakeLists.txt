@@ -1,7 +1,8 @@
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 ########################################################################## HDA
-message(STATUS  "partio/contrib/CMakeLists.txt : LEGACY_BUILD_MODE  = ${LEGACY_BUILD_MODE}")
+message(STATUS  "HDA partio/contrib/CMakeLists.txt : LEGACY_BUILD_MODE  = ${LEGACY_BUILD_MODE}")
 ########################################################################## HDA
+
 
 if (LEGACY_BUILD_MODE)
     find_package(Arnold)

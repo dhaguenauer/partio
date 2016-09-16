@@ -1,5 +1,8 @@
 ##### THIS WILL NEED SOME HELP WITH  NON-Linux compiles
 
+MESSAGE( STATUS "@@@@@@@@@@@@@@@@@@@    CMakeLists.txt partio4Arnold/plugin")
+
+
 ## CMake compatibility issues: don't modify this, please!
 cmake_minimum_required(VERSION 2.4.6)
 
@@ -131,6 +134,11 @@ set(MAYA_LIBS
     ${MAYA_OpenMayaFX_LIBRARY}
     ${MAYA_OpenMayaUI_LIBRARY}
     ${MAYA_OpenMayaRender_LIBRARY})
+
+# HDA
+#MESSAGE(STATUS '######################### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ CMakeLists.txt partioArnold/plugin')
+#MESSAGE(${PLUGIN_NAME})
+#MESSAGE(${partioArnoldCPP})
 
 add_library(${PLUGIN_NAME} SHARED ${partio4ArnoldCPP})
 set_target_properties(${PLUGIN_NAME} PROPERTIES PREFIX "")

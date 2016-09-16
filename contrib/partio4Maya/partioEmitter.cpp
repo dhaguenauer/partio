@@ -395,7 +395,10 @@ MStatus partioEmitter::compute(const MPlug& plug, MDataBlock& block)
 
     if (mLastExt != formatExt || mLastPath != cacheDir || mLastFile != cacheFile)
     {
-        cacheChanged = true;
+        
+        if (!(mLastExt == "" && mLastPath == "" && mLastFile == ""))
+            cacheChanged = true;
+
         mLastExt = formatExt;
         mLastPath = cacheDir;
         mLastFile = cacheFile;

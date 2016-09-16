@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.4.6)
 
-if (BUILD_PARTIO_MTOA)
+#if (BUILD_PARTIO_MTOA)
 	find_package(MtoA)
-endif ()
+#endif ()
 
 ########################################################################## HDA
 message(STATUS  "partio/contrib/partio4Arnold/CMakeLists.txt : BUILD_PARTIO_MTOA  = ${BUILD_PARTIO_MTOA}")
@@ -18,6 +18,7 @@ message(STATUS  "partio/contrib/partio4Arnold/CMakeLists.txt : ARNOLD_FOUND  = $
 #endif()
 
 ########################################################################## HDA
+
 if(MTOA_FOUND)
 	add_subdirectory(plugin)
 endif()
