@@ -40,14 +40,14 @@ include_directories(
 ########################################################################## HDA
 INCLUDE_DIRECTORIES(${GLEW_INCLUDE_DIR})
 ########################################################################## HDA
-
-MESSAGE( STATUS "HDA #### GLUT_INCLUDE_PATH:         " ${GLUT_INCLUDE_PATH} )
-MESSAGE( STATUS "HDA #### GLEW_INCLUDE_PATH:         " ${GLEW_INCLUDE_PATH} )
-MESSAGE( STATUS "HDA #### GLUT_FOUND:                " ${GLUT_FOUND} )
-MESSAGE( STATUS "HDA #### GLUT_INCLUDE_DIR:          " ${GLUT_INCLUDE_DIR} )
-MESSAGE( STATUS "HDA #### GLUT_LIBRARY:              " ${GLUT_LIBRARY} )
-
-MESSAGE( STATUS "HDA BLA BLA BLA ....")
+#    target_link_libraries(partview ${PARTIO_LIBRARIES} ${GLUT_LIBRARY} ${OPENGL_LIBRARY})
+#	IF (${LOCAL_INSTALL})
+#		INSTALL(TARGETS partview RUNTIME DESTINATION bin/${PARTIO_BUILD_PLATFORM})
+#	ELSE(${LOCAL_INSTALL})
+#		INSTALL(TARGETS partview RUNTIME DESTINATION bin)
+#	ENDIF(${LOCAL_INSTALL})
+#
+#MESSAGE( STATUS "HDA BLA BLA BLA ....")
 
 
 #IF(GLUT_FOUND AND OPENGL_FOUND)

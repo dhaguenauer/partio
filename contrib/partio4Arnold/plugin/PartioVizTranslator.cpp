@@ -14,7 +14,7 @@
 #include <maya/MString.h>
 #include <maya/MFloatVector.h>
 #include <maya/MFileObject.h>
-//
+
 void* CPartioVizTranslator::creator()
 {
     return new CPartioVizTranslator();
@@ -22,8 +22,6 @@ void* CPartioVizTranslator::creator()
 
 void CPartioVizTranslator::NodeInitializer(CAbTranslator context)
 {
-    MGlobal::displayInfo("CPartioVizTranslator::NodeInitializer");
-
     CExtensionAttrHelper helper(context.maya, "procedural");
     CShapeTranslator::MakeCommonAttributes(helper);
 
@@ -33,77 +31,77 @@ void CPartioVizTranslator::NodeInitializer(CAbTranslator context)
     enumNames.append("points");
     enumNames.append("spheres");
     enumNames.append("quads");
-    data.defaultValue.INT = 0;
+    data.defaultValue.INT() = 0;
     data.name = "aiRenderPointsAs";
     data.shortName = "ai_render_points_as";
     data.enums = enumNames;
     helper.MakeInputEnum(data);
 
-    data.defaultValue.BOOL = false;
+    data.defaultValue.BOOL() = false;
     data.name = "aiOverrideRadiusPP";
     data.shortName = "ai_override_radiusPP";
     helper.MakeInputBoolean(data);
 
-    data.defaultValue.FLT = 1000000.0f;
+    data.defaultValue.FLT() = 1000000.0f;
     data.name = "aiMaxParticleRadius";
     data.shortName = "ai_max_particle_radius";
     data.hasMin = true;
-    data.min.FLT = 0.0f;
+    data.min.FLT() = 0.0f;
     data.hasSoftMax = true;
-    data.softMax.FLT = 1000000.0f;
+    data.softMax.FLT() = 1000000.0f;
     helper.MakeInputFloat(data);
 
-    data.defaultValue.FLT = 0.0f;
+    data.defaultValue.FLT() = 0.0f;
     data.name = "aiMinParticleRadius";
     data.shortName = "ai_min_particle_radius";
-    data.softMax.FLT = 1.0f;
+    data.softMax.FLT() = 1.0f;
     helper.MakeInputFloat(data);
 
-    data.defaultValue.FLT = 0.2f;
+    data.defaultValue.FLT() = 0.2f;
     data.name = "aiRadius";
     data.shortName = "ai_radius";
     helper.MakeInputFloat(data);
 
-    data.defaultValue.FLT = 1.0f;
+    data.defaultValue.FLT() = 1.0f;
     data.name = "aiRadiusMultiplier";
     data.shortName = "ai_radius_multiplier";
     helper.MakeInputFloat(data);
 
-    data.defaultValue.FLT = 1.0f;
+    data.defaultValue.FLT() = 1.0f;
     data.name = "aiMotionBlurMultiplier";
     data.shortName = "ai_motion_blur_multiplier";
     data.hasMin = false;
     data.hasSoftMin = true;
-    data.softMin.FLT = 0.0f;
+    data.softMin.FLT() = 0.0f;
     helper.MakeInputFloat(data);
 
-    data.defaultValue.FLT = 0.f;
+    data.defaultValue.FLT() = 0.f;
     data.name = "aiStepSize";
     data.shortName = "ai_step_size";
     data.hasMin = true;
-    data.min.FLT = 0.f;
+    data.min.FLT() = 0.f;
     data.hasSoftMax = true;
-    data.softMax.FLT = 2.f;
+    data.softMax.FLT() = 2.f;
     data.hasSoftMin = false;
     helper.MakeInputFloat(data);
 
-    data.defaultValue.FLT = 8.0f;
+    data.defaultValue.FLT() = 8.0f;
     data.name = "aiFilterSmallParticles";
     data.shortName = "ai_filter_small_particles";
     data.hasMin = true;
-    data.min.FLT = 0.0f;
+    data.min.FLT() = 0.0f;
     data.hasSoftMax = true;
-    data.softMax.FLT = 10.0f;
+    data.softMax.FLT() = 10.0f;
     data.hasSoftMin = true;
-    data.softMin.FLT = 7.0f;
+    data.softMin.FLT() = 7.0f;
     helper.MakeInputFloat(data);
 
-    data.defaultValue.STR = "";
+    data.defaultValue.STR() = AtString("");
     data.name = "aiExportAttributes";
     data.shortName = "ai_export_attributes";
     helper.MakeInputString(data);
 
-    data.defaultValue.STR = "";
+    data.defaultValue.STR() = AtString("");
     data.name = "aiOverrideProcedural";
     data.shortName = "ai_override_procedural";
     helper.MakeInputString(data);
@@ -111,41 +109,55 @@ void CPartioVizTranslator::NodeInitializer(CAbTranslator context)
 
 AtNode* CPartioVizTranslator::CreateArnoldNodes()
 {
-    cout << "CPartioVizTranslator::CreateArnoldNodes" << endl;
     return IsMasterInstance() ? AddArnoldNode("procedural") : AddArnoldNode("ginstance");
 }
 
 void CPartioVizTranslator::Export(AtNode* anode)
 {
-    cout << "CPartioVizTranslator::Export" << endl;
-    if (AiNodeIs(anode, "ginstance"))
+    if (AiNodeIs(anode, AtString("ginstance")))
         ExportInstance(anode, GetMasterInstance());
     else
         ExportProcedural(anode, false);
 }
 
-void CPartioVizTranslator::ExportMotion(AtNode* anode)
+#ifdef MTOA12
+void CPartioVizTranslator::ExportMotion(AtNode* anode, unsigned int step)
 {
-    cout << "CPartioVizTranslator::ExportMotion" << endl;
-    ExportMatrix(anode);
+    ExportMatrix(anode, step);
 }
 
 void CPartioVizTranslator::Update(AtNode* anode)
 {
-
+    if (AiNodeIs(anode, "ginstance"))
+        ExportInstance(anode, GetMasterInstance());
+    else
+        ExportProcedural(anode, true);
 }
+
+void CPartioVizTranslator::UpdateMotion(AtNode* anode, unsigned int step)
+{
+    ExportMatrix(anode, step);
+}
+#elif MTOA14 || MTOA2
+void CPartioVizTranslator::ExportMotion(AtNode* anode)
+{
+    ExportMatrix(anode);
+}
+#endif
 
 // Deprecated : Arnold support procedural instance, but it's not safe.
 //
 AtNode* CPartioVizTranslator::ExportInstance(AtNode* instance, const MDagPath& masterInstance)
 {
-    cout << "CPartioVizTranslator::ExportInstance" << endl;
     AtNode* masterNode = AiNodeLookUpByName(masterInstance.partialPathName().asChar());
 
     AiNodeSetStr(instance, "name", m_dagPath.partialPathName().asChar());
 
-    //ExportMatrix(instance, 0);
+#ifdef MTOA12
+    ExportMatrix(instance, 0);
+#elif MTOA14 || MTOA2
     ExportMatrix(instance);
+#endif
 
     AiNodeSetPtr(instance, "node", masterNode);
     AiNodeSetBool(instance, "inherit_xform", false);
@@ -162,16 +174,17 @@ AtNode* CPartioVizTranslator::ExportInstance(AtNode* instance, const MDagPath& m
 
 void CPartioVizTranslator::ExportShaders()
 {
-    cout << "CPartioVizTranslator::ExportShaders" << endl;
     AiMsgWarning("[mtoa] Shaders untested with new multitranslator and standin code.");
     /// TODO: Test shaders with standins.
-    //ExportPartioVizShaders(GetArnoldRootNode());
+#if MTOA12
+    ExportPartioVizShaders(GetArnoldRootNode());
+#elif MTOA14 || MTOA2
     ExportPartioVizShaders(GetArnoldNode());
+#endif
 }
 
 void CPartioVizTranslator::ExportPartioVizShaders(AtNode* procedural)
 {
-    cout << "CPartioVizTranslator::ExportPartioVizShaders" << endl;
     int instanceNum = m_dagPath.isInstanced() ? m_dagPath.instanceNumber() : 0;
 
     std::vector<AtNode*> meshShaders;
@@ -179,8 +192,11 @@ void CPartioVizTranslator::ExportPartioVizShaders(AtNode* procedural)
     MPlug shadingGroupPlug = GetNodeShadingGroup(m_dagPath.node(), instanceNum);
     if (!shadingGroupPlug.isNull())
     {
-        //AtNode* shader = ExportNode(shadingGroupPlug);
+#if MTOA12
+        AtNode* shader = ExportNode(shadingGroupPlug);
+#elif MTOA14 || MTOA2
         AtNode* shader = ExportConnectedNode(shadingGroupPlug);
+#endif
         if (shader != 0)
         {
             AiNodeSetPtr(procedural, "shader", shader);
@@ -190,57 +206,28 @@ void CPartioVizTranslator::ExportPartioVizShaders(AtNode* procedural)
         {
             AiMsgWarning("[mtoa] [translator %s] ShadingGroup %s has no surfaceShader input",
                          GetTranslatorName().asChar(), MFnDependencyNode(shadingGroupPlug.node()).name().asChar());
-            /*AiMsgWarning("[mtoa] ShadingGroup %s has no surfaceShader input.",
-                  fnDGNode.name().asChar());*/
             AiNodeSetPtr(procedural, "shader", 0);
         }
     }
 }
 
-// THIS MAY NOT REALLY BE NEEDED ANYMORE BUT LEAVING IT FOR NOW
-void CPartioVizTranslator::ExportBoundingBox(AtNode* procedural)
-{
-    cout << "CPartioVizTranslator::ExportBoundingBox" << endl;
-    MBoundingBox boundingBox = m_DagNode.boundingBox();
-    MPoint bbMin = boundingBox.min();
-    MPoint bbMax = boundingBox.max();
-
-    float minCoords[4];
-    float maxCoords[4];
-
-    bbMin.get(minCoords);
-    bbMax.get(maxCoords);
-
-    AiNodeSetPnt(procedural, "min", minCoords[0], minCoords[1], minCoords[2]);
-    AiNodeSetPnt(procedural, "max", maxCoords[0], maxCoords[1], maxCoords[2]);
-
-}
-
-
 AtNode* CPartioVizTranslator::ExportProcedural(AtNode* procedural, bool update)
 {
-    cout << "CPartioVizTranslator::ExportProcedural" << endl;
     m_DagNode.setObject(m_dagPath.node());
 
     AiNodeSetStr(procedural, "name", m_dagPath.partialPathName().asChar());
 
-    //ExportMatrix(procedural, 0);
+#if MTOA12
+    ExportMatrix(procedural, 0);
+#elif MTOA14 || MTOA2
     ExportMatrix(procedural);
+#endif
     ProcessRenderFlags(procedural);
-
     ExportPartioVizShaders(procedural);
-
 
     if (!update)
     {
-        /// TODO: figure out how to  use a  env variable to path just the .so name correctly
-        //MFileObject envProcFilePath;
-        //envProcFilePath.setRawPath("${MTOA_PROCEDURALS_PATH}");
-        //MString envProcPath =envProcFilePath.resolvedPath();
-        //MString dso = envProcPath+(MString("/partioGenerator.so"));
-
-        //MString dso = "[PARTIO_ARNOLD_PROCEDURAL]";
-        MString dso = "partioGenerator.so";
+        MString dso = "[PARTIO_ARNOLD_PROCEDURAL]";
 
         // we add this here so we can add in a custom   particle reading procedural instead of the default one
         MString overrideProc = m_DagNode.findPlug("aiOverrideProcedural").asString();
@@ -393,26 +380,13 @@ AtNode* CPartioVizTranslator::ExportProcedural(AtNode* procedural, bool update)
             AiNodeDeclare(procedural, "arg_extraPPAttrs", "constant STRING");
             AiNodeSetStr(procedural, "arg_extraPPAttrs", m_customAttrs.asChar());
         }
-
-        /// right now because we're using  load at init, we don't need to export the bounding box
-        //ExportBoundingBox(procedural);
-
     }
     return procedural;
 }
 
-
 bool CPartioVizTranslator::fileCacheExists(const char* fileName)
 {
     struct stat fileInfo;
-    bool statReturn;
-    int intStat;
-
-    intStat = stat(fileName, &fileInfo);
-    if (intStat == 0)
-        statReturn = true;
-    else
-        statReturn = false;
-
-    return (statReturn);
+    int intStat = stat(fileName, &fileInfo);
+    return intStat == 0;
 }

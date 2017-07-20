@@ -37,32 +37,13 @@ MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 
 if(COMMAND cmake_policy)
      cmake_policy(SET CMP0003 NEW)
-	 cmake_policy(SET CMP0015 NEW)  # to supress relative library directory warnings
+     cmake_policy(SET CMP0015 NEW)  # to supress relative library directory warnings
 endif(COMMAND cmake_policy)
 
 ## allow more human readable "if then else" constructs
 SET( CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE )
 ## Use verbose make file
 SET ( CMAKE_VERBOSE_MAKEFILE TRUE )
-
-
-## Choose build options
-# Disney specific method of choosing variant
-IF("$ENV{FLAVOR}" STREQUAL "optimize")
-    SET(CMAKE_BUILD_TYPE "Release" CACHE STRING "type of build" FORCE)
-ENDIF("$ENV{FLAVOR}" STREQUAL "optimize")
-IF("$ENV{FLAVOR}" STREQUAL "debug")
-    SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "type of build" FORCE)
-ENDIF("$ENV{FLAVOR}" STREQUAL "debug")
-IF("$ENV{FLAVOR}" STREQUAL "debugInfo")
-    SET(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "type of build" FORCE)
-ENDIF("$ENV{FLAVOR}" STREQUAL "debugInfo")
-# Set to release if nothing else defined
-IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE "Release" CACHE STRING
-      "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel."
-      FORCE)
-ENDIF(NOT CMAKE_BUILD_TYPE)
 
 ## project name & version
 PROJECT( partio )
@@ -75,21 +56,21 @@ SET( PARTIO_HOME ${CMAKE_SOURCE_DIR} )
 
 ## Setup platform specific helper defines build variants
 IF(WIN32)
-	ADD_DEFINITIONS (-DPARTIO_WIN32)
+    ADD_DEFINITIONS (-DPARTIO_WIN32)
 
-	# these are the defaults included with partio
-	SET( ZLIB_INCLUDE_DIR "${PARTIO_HOME}/winReqLibs/zlib-win_x64/include")
-	SET( ZLIB_LIBRARY_DIR "${PARTIO_HOME}/winReqLibs/zlib-win_x64/lib")
-	SET( ZLIB_LIBRARY "${ZLIB_LIBRARY_DIR}/zlib.lib")
-	SET( GLUT_ROOT_PATH "${PARTIO_HOME}/winReqLibs/freeglut-2.8.0-1")
-	SET( GLUT_INCLUDE_PATH "${PARTIO_HOME}/winReqLibs/freeglut-2.8.0-1/include")
-	SET( GLUT_LIBRARY_PATH "${PARTIO_HOME}/winReqLibs/freeglut-2.8.0-1/lib/x64")
-	SET( SWIG_EXECUTABLE "${PARTIO_HOME}/winReqLibs/swigwin-2.0.4/swig.exe")
-	SET( PARTIO_BUILD_PLATFORM "windows_x86_64")
-	set(CMAKE_MODULE_PATH ${PARTIO_HOME}/cmake)
+    # these are the defaults included with partio
+    SET( ZLIB_INCLUDE_DIR "${PARTIO_HOME}/winReqLibs/zlib-win_x64/include")
+    SET( ZLIB_LIBRARY_DIR "${PARTIO_HOME}/winReqLibs/zlib-win_x64/lib")
+    SET( ZLIB_LIBRARY "${ZLIB_LIBRARY_DIR}/zlib.lib")
+    SET( GLUT_ROOT_PATH "${PARTIO_HOME}/winReqLibs/freeglut-2.8.0-1")
+    SET( GLUT_INCLUDE_PATH "${PARTIO_HOME}/winReqLibs/freeglut-2.8.0-1/include")
+    SET( GLUT_LIBRARY_PATH "${PARTIO_HOME}/winReqLibs/freeglut-2.8.0-1/lib/x64")
+    SET( SWIG_EXECUTABLE "${PARTIO_HOME}/winReqLibs/swigwin-2.0.4/swig.exe")
+    SET( PARTIO_BUILD_PLATFORM "windows_x86_64")
+    set(CMAKE_MODULE_PATH ${PARTIO_HOME}/cmake)
 ELSE(WIN32)
-	ADD_DEFINITIONS (-Wextra -Wno-unused-parameter)
-	SET( CMAKE_CXX_FLAGS "-fPIC")
+    ADD_DEFINITIONS (-Wextra -Wno-unused-parameter)
+    SET( CMAKE_CXX_FLAGS "-fPIC")
 ENDIF(WIN32)
 
 # to switch between rez and local install paths 
@@ -97,32 +78,19 @@ SET (LOCAL_INSTALL 0)
 
 ## Set install location
 IF ( ${CMAKE_INSTALL_PREFIX}  STREQUAL  "/usr/local")
-	message(STATUS  "CMAKE INSTALL PREFIX  being changed to local build")
-	SET (LOCAL_INSTALL 1)
-	IF (UNIX)
-		EXECUTE_PROCESS(COMMAND sh -c "echo `uname`-`uname -m`" OUTPUT_VARIABLE VARIANT_DIRECTORY OUTPUT_STRIP_TRAILING_WHITESPACE)
-		SET(PARTIO_BUILD_PLATFORM "${VARIANT_DIRECTORY}")
-		MESSAGE(STATUS "Build Platform: ${PARTIO_BUILD_PLATFORM}")
-	ENDIF(UNIX)
+    message(STATUS  "CMAKE INSTALL PREFIX  being changed to local build")
+    SET (LOCAL_INSTALL 1)
+    IF (UNIX)
+        EXECUTE_PROCESS(COMMAND sh -c "echo `uname`-`uname -m`" OUTPUT_VARIABLE VARIANT_DIRECTORY OUTPUT_STRIP_TRAILING_WHITESPACE)
+        SET(PARTIO_BUILD_PLATFORM "${VARIANT_DIRECTORY}")
+        MESSAGE(STATUS "Build Platform: ${PARTIO_BUILD_PLATFORM}")
+    ENDIF(UNIX)
 
 SET(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/build-${PARTIO_BUILD_PLATFORM}/)
 ENDIF()
 
 message(STATUS  "CMAKE INSTALL PREFIX  = ${CMAKE_INSTALL_PREFIX}")
 
-## Search for needed  libraries
-find_package(SWIG REQUIRED)
-
-## Search for useful libraries
-find_package(GLUT REQUIRED)
-
-IF(GLUT_FOUND)
-	INCLUDE_DIRECTORIES( ${GLUT_INCLUDE_PATH} )
-	LINK_DIRECTORIES (${GLUT_ROOT_PATH}/lib/x64)
-ELSE(GLUT_FOUND)
-	INCLUDE_DIRECTORIES( ${GLUT_INCLUDE_PATH} )
-	LINK_DIRECTORIES ( ${GLUT_LIBRARY_PATH} )
-ENDIF(GLUT_FOUND)
 
 ################################################################################ HDA TMP
 message(STATUS  " partio/CMakeLists.txt : GLEW_INCLUDE_DIR  = ${GLEW_INCLUDE_DIR}")
@@ -147,51 +115,62 @@ ENDIF(ZLIB_FOUND)
 ## Make modules able to see partio library
 # Setup environment variable to link partio
 IF (WIN32)
-	SET( PARTIO_LIBRARIES freeglut zlib partio )
+    SET( PARTIO_LIBRARIES freeglut zlib partio )
 ELSEIF(APPLE)
-	SET( PARTIO_LIBRARIES ${GLUT_glut_LIBRARY} ${GLUT_cocoa_LIBRARY} ${ZLIB_LIBRARY} partio )
+    SET( PARTIO_LIBRARIES ${GLUT_glut_LIBRARY} ${GLUT_cocoa_LIBRARY} ${ZLIB_LIBRARY} partio )
 ELSEIF (UNIX)
-	SET( PARTIO_LIBRARIES glut z partio )
+    SET( PARTIO_LIBRARIES glut z partio )
 ENDIF()
 # make it so partio can be found
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR}/src/lib )
 
-########################################################################## HDA
-#SET (BUILD_PARTIO_LIBRARY 1)
-#SET (BUILD_PARTIO_MAYA 1)
-#SET (BUILD_PARTIO_MTOA 1)
-########################################################################## HDA
+IF (PARTIO_NAMESPACE)
+    ADD_DEFINITIONS(-DPARTIO_NAMESPACE=${PARTIO_NAMESPACE})
+ENDIF ()
+
+option(BUILD_PARTIO_LIBRARY "Build the partio library" OFF)
+option(BUILD_PARTIO_MAYA "Build the maya plugin" OFF)
+option(BUILD_PARTIO_ARNOLD "Build the arnold plugin" OFF)
+option(BUILD_PARTIO_MTOA "Build the mtoa plugin" OFF)
+option(BUILD_PARTIO_HOUDINI "Build the houdini plugin" OFF)
+option(BUILD_PARTIO_USD "Build the usd plugin" OFF)
+option(BUILD_PARTIO_USD_MAYA "Build the usdMaya plugin" OFF)
+
 SET (LEGACY_BUILD_MODE 1)
 
-IF (BUILD_PARTIO_LIBRARY OR BUILD_PARTIO_MAYA OR BUILD_PARTIO_MTOA OR BUILD_PARTIO_ARNOLD OR BUILD_PARTIO_HOUDINI)
-	SET (LEGACY_BUILD_MODE 0)
+IF (BUILD_PARTIO_LIBRARY OR BUILD_PARTIO_MAYA OR BUILD_PARTIO_MTOA OR BUILD_PARTIO_ARNOLD OR BUILD_PARTIO_HOUDINI OR BUILD_PARTIO_USD OR BUILD_PARTIO_USD_MAYA)
+    SET (LEGACY_BUILD_MODE 0)
 ENDIF()
 
-########################################################################## HDA
-message(STATUS  "partio/CMakeLists.txt : LEGACY_BUILD_MODE  = ${LEGACY_BUILD_MODE}")
-########################################################################## HDA
 IF (LEGACY_BUILD_MODE)
-	ADD_SUBDIRECTORY (src/lib)
-	ADD_SUBDIRECTORY (src/tools)
-	ADD_SUBDIRECTORY (src/py)
-	ADD_SUBDIRECTORY (src/tests)
-	#ADD_SUBDIRECTORY (src/houdini)
-	#ADD_SUBDIRECTORY (src/doc)
-	ADD_SUBDIRECTORY (contrib)
+    ADD_SUBDIRECTORY (src/lib)
+    ADD_SUBDIRECTORY (src/tools)
+    ADD_SUBDIRECTORY (src/py)
+    ADD_SUBDIRECTORY (src/tests)
+    #ADD_SUBDIRECTORY (src/houdini)
+    #ADD_SUBDIRECTORY (src/doc)
+    ADD_SUBDIRECTORY (contrib)
 ELSE (LEGACY_BUILD_MODE)
-	########################################################################## HDA
-	message(STATUS  "partio/CMakeLists.txt : BUILD_PARTIO_LIBRARY  = ${BUILD_PARTIO_LIBRARY}")
-	########################################################################## HDA
+    IF (BUILD_PARTIO_LIBRARY)
+        ADD_SUBDIRECTORY (src/lib)
+        ADD_SUBDIRECTORY (src/tools)
+        # Temp removal of the python bindings, have to figure out how to change the swig files
+        #ADD_SUBDIRECTORY (src/py)
+        ADD_SUBDIRECTORY (src/tests)
 
-	IF (BUILD_PARTIO_LIBRARY)
-		ADD_SUBDIRECTORY (src/lib)
-		ADD_SUBDIRECTORY (src/tools)
-		ADD_SUBDIRECTORY (src/py)
-		ADD_SUBDIRECTORY (src/tests)
-	ENDIF (BUILD_PARTIO_LIBRARY)
-	#ADD_SUBDIRECTORY (src/houdini)
-	#ADD_DEFINITIONS_SUBDIRECTORY (src/doc)
-	IF (BUILD_PARTIO_MAYA OR BUILD_PARTIO_MTOA OR BUILD_PARTIO_ARNOLD OR BUILD_PARTIO_HOUDINI)
-		ADD_SUBDIRECTORY (contrib)
-	ENDIF()
+        ## Search for useful libraries
+        find_package(GLUT REQUIRED)
+        IF(GLUT_FOUND)
+            INCLUDE_DIRECTORIES( ${GLUT_INCLUDE_PATH} )
+            LINK_DIRECTORIES (${GLUT_ROOT_PATH}/lib/x64)
+        ELSE(GLUT_FOUND)
+            INCLUDE_DIRECTORIES( ${GLUT_INCLUDE_PATH} )
+            LINK_DIRECTORIES ( ${GLUT_LIBRARY_PATH} )
+        ENDIF(GLUT_FOUND)
+    ENDIF (BUILD_PARTIO_LIBRARY)
+    #ADD_SUBDIRECTORY (src/houdini)
+    #ADD_DEFINITIONS_SUBDIRECTORY (src/doc)
+    IF (BUILD_PARTIO_MAYA OR BUILD_PARTIO_MTOA OR BUILD_PARTIO_ARNOLD OR BUILD_PARTIO_HOUDINI OR BUILD_PARTIO_USD OR BUILD_PARTIO_USD_MAYA)
+        ADD_SUBDIRECTORY (contrib)
+    ENDIF()
 ENDIF ()

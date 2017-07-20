@@ -1,26 +1,28 @@
 #!/bin/bash
 
-build_partio_lib=1
-build_partio_maya=1
+build_partio_lib=0
+build_partio_maya=0
 build_partio_arnold=1
+
+suppress_build_dirs_prior_build=0
 
 build_type=Release
 
 #mayaVersions=(2015.sp6) #2014.sp4 do not build
-#mayaVersions=(2016.sp6) #2014.sp4 do not build
+mayaVersions=(2016.sp6) #2014.sp4 do not build
 #mayaVersions=(ext2.2016.sp1)
-mayaVersions=(2017.0.0)
+#mayaVersions=(2017.0.0)
 
 
-#####################################################################
-#    for MAYA 2016:                                                 #
-# rez env gxx-4.6 cmake swig-3.0.5 glew-2.0 python-2.7 mayaAPI-2016 #
-#																	#
-#####################################################################
+#############################################################################
+#    for MAYA 2016:                                                 		#
+# rez gxx-4.8 cmake swig-3.0.5 glew-2.0 python-2.7 mayaAPI-2016 boost-1.48  #
+#																			#
+#############################################################################
 
 
-arnold_version='4.2.16.2'
-mtoa_version='1.4.2.1.16'
+arnold_version='5.0.1.0'
+mtoa_version='2.0.1.0'
 compiler_path='/usr/bin/g++-4.6'
 
 swig_executable='/s/apps/packages/dev/swig/3.0.5/platform-linux/bin/swig'
@@ -36,14 +38,19 @@ glew_static_library=$REZ_GLEW_ROOT'/lib64/libGLEW.a'
 
 
 export ARNOLD_HOME=/s/apps/packages/cg/arnold/$arnold_version/platform-linux
-export MTOA_ROOT=/s/apps/packages/mikros/mayaModules/mimtoa/$mtoa_version/platform-linux/arnold-4.2/maya-2016
+#export MTOA_ROOT=/s/apps/packages/mikros/mayaModules/mimtoa/$mtoa_version/platform-linux/arnold-4.2/maya-2016
+export MTOA_ROOT=/s/apps/packages/cg/mtoa/2.0.0.1/platform-linux/maya-2016					# no mimtoa version yet so we take the mtoa one
 export PARTIO_HOME=/datas/hda/build/partio/build-Linux-x86_64
 
-rm -fr /datas/hda/build/partio/partio.build
-rm -fr /datas/hda/build/partio/build-Linux-x86_64
 
-mkdir partio.build
-mkdir build-Linux-x86_64
+if [ "$suppress_build_dirs_prior_build" == 1 ]; then
+
+	rm -fr /datas/hda/build/partio/partio.build
+	rm -fr /datas/hda/build/partio/build-Linux-x86_64
+	
+	mkdir partio.build
+	mkdir build-Linux-x86_64
+fi
 
 cd partio.build
 
@@ -74,13 +81,12 @@ if [ "$build_partio_maya" == 1 ]; then
 		cmake .. \
 		-DCMAKE_BUILD_TYPE=$build_type \
 		-DGLEW_INCLUDE_DIR=$glew_include_dir \
-		-DGLEW_STATIC_LIBRARY=$glew_static_library \
 		-DMAYA_EXECUTABLE=$maya_executable \
 		-DBUILD_PARTIO_LIBRARY=1 \
 		-DBUILD_PARTIO_MAYA=1 \
 		-DBUILD_PARTIO_MTOA=0
 		
-		make -j12
+		make -j1
 		make install
 	done	
 fi
@@ -103,5 +109,13 @@ make install
 fi
 
 # cp /s/apps/users/hda/build/partio/build-Linux-x86_64/maya/2016/plug-ins/Linux-x86_64/partio4Maya.so /s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-2016/plug-ins
+
+
+#cp /datas/hda/build/partio/build-Linux-x86_64/maya/2016/plug-ins/Linux-x86_64/partio4Maya.so /s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-2016/plug-ins
+#cp /datas/hda/build/partio/build-Linux-x86_64/arnold/procedurals/partioGenerator.so /s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-2.0.1/maya-2016/extensions/
+#cp ./contrib/partio4Arnold/plugin/partioTranslator.py /s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-2.0.1/maya-2016/extensions/
+
+
+
 
 

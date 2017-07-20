@@ -14,6 +14,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
 if (UNIX AND NOT APPLE)
     add_definitions(-DLINUX)
     add_definitions(-Werror)
+    add_definitions(-std=c++11)
 endif ()
 if (APPLE )
     add_definitions(-DMAC_PLUGIN)
@@ -89,15 +90,17 @@ if (WIN32)
     set_target_properties(${PLUGIN_NAME} PROPERTIES LINK_FLAGS "/export:initializePlugin /export:uninitializePlugin")
 endif ()
 
+find_path(GLEW_INCLUDE_DIR NAMES GL/glew.h)
 find_library(GLEW_STATIC_LIBRARY NAMES libGLEW.a)
 
-TARGET_LINK_LIBRARIES(${PLUGIN_NAME}
-                      ${GLEW_STATIC_LIBRARY}
+target_link_libraries(${PLUGIN_NAME}
+                      #${GLEW_STATIC_LIBRARY}
                       ${ZLIB}
                       ${PARTIO_LIBRARIES}
                       ${MAYA_LIBS}
                       ${OPENGL_gl_LIBRARY}
                       ${OPENGL_glu_LIBRARY})
+target_include_directories(${PLUGIN_NAME} PRIVATE ${GLEW_INCLUDE_DIR})
 
 file(GLOB PARTIO4MAYA_SCRIPTS "scripts/*.mel")
 file(GLOB PARTIO4MAYA_ICONS "icons/*")
