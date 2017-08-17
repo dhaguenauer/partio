@@ -104,17 +104,6 @@ proc generateAttributesMenu(string $nodeName, string $attrNameList[], string $la
     int $i = 0;
     for ($i = 0; $i < size($attributes); ++$i)
     {
-        attrControlGrp -annotation $labels[$i] -attribute ($nodeName + "." + $attributes[$i]);
-        popupMenu;
-        for ($attr in $attrNameList)
-        {
-            menuItem -label $attr -c ("setAttr -type \"string\" " + $nodeName + "." + $attributes[$i] + " " + $attr);
-        }
-    }
-}
-{
-    int $i = 0;
-    for ($i = 0; $i < size($attributes); ++$i)
         string $customCommand = $customCommands[$i];
         if (size($customCommand) > 0)
         {
@@ -139,6 +128,7 @@ proc generateAttributesMenu(string $nodeName, string $attrNameList[], string $la
         }
     }
 }
+
 global proc pioVelocityFromChanged(string $nodeName)
 {
     string $velocityFrom = `getAttr ($nodeName+".velocityFrom")`;
@@ -147,18 +137,27 @@ global proc pioVelocityFromChanged(string $nodeName)
         setAttr ($nodeName+".velocitySource") 1;
     }
 }
+
 global proc pioInstCustomAttrsManage (string $attrName)
 {
     string $nodeName = plugNode($attrName);
     if (`columnLayout -q -exists "foobar"`)
     { deleteUI "foobar"; }
+
     columnLayout -rs 0 foobar;
+
     string $multiList[] = `listAttr -multi ($nodeName+".partioCacheAttributes")`;
+
     string $attrNameList[] = {};
     int $id = 0;
+    for ($multi in $multiList)
+    {
         $attrNameList[$id] = `getAttr ($nodeName + "." + $multi)`;
         $id = $id + 1;
+    }
+
     string $customCommands[];
+
     ///  General attrs
     frameLayout -collapse 0 -collapsable 0 -borderVisible 0 -w 450 -l "General Channels" ;
     /// SCALE
@@ -207,6 +206,7 @@ global proc pioInstCustomAttrsManage (string $attrName)
     generateAttributesMenu($nodeName, $attrNameList, $viewportLabels, $viewportAttributes, $customCommands);
     setParent ..;
     setParent ..;
+
     frameLayout -collapse 1 -borderVisible 0 -w 450 -l "Custom Attributes Export";
 
     attrControlGrp -attribute ($nodeName+".exportAttributes") "ExportAttributesCtrlGrp";
