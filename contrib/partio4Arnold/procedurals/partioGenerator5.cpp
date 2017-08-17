@@ -8,7 +8,7 @@
 #include <boost/regex.hpp>
 #include <Partio.h>
 
-AI_PROCEDURAL_NODE_EXPORT_METHODS(partioGeneratorMtd)
+AI_PROCEDURAL_NODE_EXPORT_METHODS(partioGeneratorMtd);
 
 namespace {
     template<typename T>
@@ -47,6 +47,7 @@ namespace {
         param = AiNodeGetRGB(node, paramName);
     }
 
+
     struct PartioData {
         PARTIO::ParticlesData* points;
 
@@ -78,6 +79,9 @@ namespace {
         bool arg_overrideRadiusPP;
         bool cacheExists;
 
+
+        AtNode* arg_shader;
+
         PartioData()
         {
             points = 0;
@@ -100,6 +104,9 @@ namespace {
 
             arg_overrideRadiusPP = false;
             cacheExists = false;
+
+            arg_shader = NULL;
+
         }
 
         ~PartioData()
@@ -136,6 +143,8 @@ namespace {
             getParam(global_motionByFrame, node, "global_motionByFrame");
             getParam(arg_stepSize, node, "arg_stepSize");
             getParam(arg_extraPPAttrs, node, "arg_extraPPAttrs");
+
+            arg_shader = (AtNode*)AiNodeGetPtr(node, "arg_shader");
 
             AiMsgInfo("[partioGenerator] loading cache  %s", arg_file.c_str());
 
@@ -425,6 +434,7 @@ namespace {
             } else {
                 AiNodeDeclare(currentInstance, "rgbPP", "constant RGB");
                 AiNodeSetRGB(currentInstance, "rgbPP", arg_defaultColor.r, arg_defaultColor.g, arg_defaultColor.b);
+                AiMsgDebug("[partioGenerator] rgbPP by constant RGB");
             }
 
             /// INCANDESCENCE
@@ -539,6 +549,10 @@ namespace {
                 AiNodeSetFlt(currentInstance, "step_size", arg_stepSize);
             }
 
+            // shader
+            AiNodeSetPtr(currentInstance, "shader", arg_shader);
+
+
             AiMsgDebug("[partioGenerator] Done with partioGeneration! ");
             return currentInstance;
         }
@@ -567,8 +581,8 @@ node_parameters
     AiParameterStr("arg_incandFrom", "");
     AiParameterStr("arg_opacFrom", "");
     AiParameterStr("arg_radFrom", "");
-    AiParameterStr("arg_defaultColor", "");
-    AiParameterStr("arg_defaultOpac", "");
+    AiParameterRGB("arg_defaultColor", 1.0, 1.0, 1.0);
+    AiParameterFlt("arg_defaultOpac", 1.0);
     AiParameterFlt("arg_filterSmallParticles", 8.0f);
     AiParameterInt("global_motionBlurSteps", 1);
     AiParameterFlt("global_fps", 24.0f);
@@ -576,28 +590,38 @@ node_parameters
     AiParameterFlt("arg_stepSize", 0.0f);
     AiParameterStr("arg_extraPPAttrs", "");
 
+    AiParameterPtr("arg_shader", NULL);
+
 }
 
 procedural_init
 {
+    AiMsgDebug("[partioGenerator] procedural_init() --");
+
     auto* data = new PartioData();
     *user_ptr = data;
     return data->init(node);
+
+    return true;
+
 }
 
 procedural_num_nodes
 {
+    AiMsgDebug("[partioGenerator] procedural_num_nodes()");
     return 1;
 }
 
 procedural_get_node
-{
+{    
+    AiMsgDebug("[partioGenerator] procedural_get_node()");
     auto* data = reinterpret_cast<PartioData*>(user_ptr);
     return data->getNode();
 }
 
 procedural_cleanup
 {
+    AiMsgDebug("[partioGenerator] procedural_cleanup()");
     delete reinterpret_cast<PartioData*>(user_ptr);
     return 1;
 }

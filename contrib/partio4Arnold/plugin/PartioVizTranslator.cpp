@@ -109,7 +109,11 @@ void CPartioVizTranslator::NodeInitializer(CAbTranslator context)
 
 AtNode* CPartioVizTranslator::CreateArnoldNodes()
 {
-    return IsMasterInstance() ? AddArnoldNode("procedural") : AddArnoldNode("ginstance");
+    #ifdef MTOA2
+        return IsMasterInstance() ? AddArnoldNode("partioGenerator") : AddArnoldNode("ginstance");
+    #else
+        return IsMasterInstance() ? AddArnoldNode("procedural") : AddArnoldNode("ginstance");
+    #endif
 }
 
 void CPartioVizTranslator::Export(AtNode* anode)
@@ -227,13 +231,8 @@ AtNode* CPartioVizTranslator::ExportProcedural(AtNode* procedural, bool update)
 
     if (!update)
     {
-        MString dso = "[PARTIO_ARNOLD_PROCEDURAL]";
-
         // we add this here so we can add in a custom   particle reading procedural instead of the default one
         MString overrideProc = m_DagNode.findPlug("aiOverrideProcedural").asString();
-
-        if (overrideProc.length() > 0)
-            dso = overrideProc;
 
         MString formattedName = m_DagNode.findPlug("renderCachePath").asString();
         int frameNum = m_DagNode.findPlug("time").asInt();
@@ -289,53 +288,53 @@ AtNode* CPartioVizTranslator::ExportProcedural(AtNode* procedural, bool update)
 
         // TODO: change these attributes to FindMayaPlug to support MtoA override nodes
 
-        AiNodeSetStr(procedural, "dso", dso.asChar());
-        AiNodeSetBool(procedural, "load_at_init", true);
+        //AiNodeSetStr(procedural, "filename", filename.asChar());
+        //AiNodeSetBool(procedural, "load_at_init", true);
 
-        AiNodeDeclare(procedural, "arg_file", "constant STRING");
+        //AiNodeDeclare(procedural, "arg_file", "constant STRING");
         AiNodeSetStr(procedural, "arg_file", newFoo.asChar());
 
-        AiNodeDeclare(procedural, "arg_radius", "constant FLOAT");
+        //AiNodeDeclare(procedural, "arg_radius", "constant FLOAT");
         AiNodeSetFlt(procedural, "arg_radius", m_DagNode.findPlug("defaultRadius").asFloat());
 
-        AiNodeDeclare(procedural, "arg_maxParticleRadius", "constant FLOAT");
+        //AiNodeDeclare(procedural, "arg_maxParticleRadius", "constant FLOAT");
         AiNodeSetFlt(procedural, "arg_maxParticleRadius", m_DagNode.findPlug("aiMaxParticleRadius").asFloat());
 
-        AiNodeDeclare(procedural, "arg_minParticleRadius", "constant FLOAT");
+        //AiNodeDeclare(procedural, "arg_minParticleRadius", "constant FLOAT");
         AiNodeSetFlt(procedural, "arg_minParticleRadius", m_DagNode.findPlug("aiMinParticleRadius").asFloat());
 
-        AiNodeDeclare(procedural, "arg_filterSmallParticles", "constant FLOAT");
+        //AiNodeDeclare(procedural, "arg_filterSmallParticles", "constant FLOAT");
         AiNodeSetFlt(procedural, "arg_filterSmallParticles", m_DagNode.findPlug("aiFilterSmallParticles").asFloat());
 
-        AiNodeDeclare(procedural, "overrideRadiusPP", "constant BOOL");
+        //AiNodeDeclare(procedural, "overrideRadiusPP", "constant BOOL");
         AiNodeSetBool(procedural, "overrideRadiusPP", m_DagNode.findPlug("aiOverrideRadiusPP").asBool());
 
-        AiNodeDeclare(procedural, "global_motionBlurSteps", "constant INT");
+        //AiNodeDeclare(procedural, "global_motionBlurSteps", "constant INT");
         AiNodeSetInt(procedural, "global_motionBlurSteps", (int)GetNumMotionSteps());
 
-        AiNodeDeclare(procedural, "global_motionByFrame", "constant FLOAT");
+        //AiNodeDeclare(procedural, "global_motionByFrame", "constant FLOAT");
         AiNodeSetFlt(procedural, "global_motionByFrame", (float)GetMotionByFrame());
 
         MTime oneSec(1.0, MTime::kSeconds);
         float fps = (float)oneSec.asUnits(MTime::uiUnit());
-        AiNodeDeclare(procedural, "global_fps", "constant FLOAT");
+        //AiNodeDeclare(procedural, "global_fps", "constant FLOAT");
         AiNodeSetFlt(procedural, "global_fps", fps);
 
-        AiNodeDeclare(procedural, "arg_motionBlurMult", "constant FLOAT");
+        //AiNodeDeclare(procedural, "arg_motionBlurMult", "constant FLOAT");
         AiNodeSetFlt(procedural, "arg_motionBlurMult", m_DagNode.findPlug("aiMotionBlurMultiplier").asFloat());
 
-        AiNodeDeclare(procedural, "arg_renderType", "constant INT");
+        //AiNodeDeclare(procedural, "arg_renderType", "constant INT");
         AiNodeSetInt(procedural, "arg_renderType", m_DagNode.findPlug("aiRenderPointsAs").asInt());
 
-        AiNodeDeclare(procedural, "arg_radiusMult", "constant FLOAT");
+        //AiNodeDeclare(procedural, "arg_radiusMult", "constant FLOAT");
         AiNodeSetFlt(procedural, "arg_radiusMult", m_DagNode.findPlug("aiRadiusMultiplier").asFloat());
 
-        AiNodeDeclare(procedural, "arg_velFrom", "constant STRING");
-        AiNodeDeclare(procedural, "arg_accFrom", "constant STRING");
-        AiNodeDeclare(procedural, "arg_rgbFrom", "constant STRING");
-        AiNodeDeclare(procedural, "arg_opacFrom", "constant STRING");
-        AiNodeDeclare(procedural, "arg_radFrom", "constant STRING");
-        AiNodeDeclare(procedural, "arg_incandFrom", "constant STRING");
+        //AiNodeDeclare(procedural, "arg_velFrom", "constant STRING");
+        //AiNodeDeclare(procedural, "arg_accFrom", "constant STRING");
+        //AiNodeDeclare(procedural, "arg_rgbFrom", "constant STRING");
+        //AiNodeDeclare(procedural, "arg_opacFrom", "constant STRING");
+        //AiNodeDeclare(procedural, "arg_radFrom", "constant STRING");
+        //AiNodeDeclare(procedural, "arg_incandFrom", "constant STRING");
 
         MPlug partioAttrs = m_DagNode.findPlug("partioCacheAttributes");
 
@@ -358,8 +357,8 @@ AtNode* CPartioVizTranslator::ExportProcedural(AtNode* procedural, bool update)
         defaultColorComp.getValue(defaultColor.z);
 
         float defaultOpac = m_DagNode.findPlug("defaultAlpha").asFloat();
-        AiNodeDeclare(procedural, "arg_defaultColor", "constant RGB");
-        AiNodeDeclare(procedural, "arg_defaultOpac", "constant FLOAT");
+        //AiNodeDeclare(procedural, "arg_defaultColor", "constant RGB");
+        //AiNodeDeclare(procedural, "arg_defaultOpac", "constant FLOAT");
 
         AiNodeSetRGB(procedural, "arg_defaultColor", defaultColor.x, defaultColor.y, defaultColor.z);
         AiNodeSetFlt(procedural, "arg_defaultOpac", defaultOpac);
