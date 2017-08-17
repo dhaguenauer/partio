@@ -22,7 +22,7 @@ mayaVersions=(2016.sp6) #2014.sp4 do not build
 
 
 arnold_version='5.0.1.0'
-mtoa_version='2.0.1.0'
+mtoa_version='$mtoa_variant.0'
 compiler_path='/usr/bin/g++-4.6'
 
 swig_executable='/s/apps/packages/dev/swig/3.0.5/platform-linux/bin/swig'
@@ -91,7 +91,20 @@ if [ "$build_partio_maya" == 1 ]; then
 	done	
 fi
 
-### Build Partio Arnold procedural
+### Build Partio Arnold proceduralmaya_variant='$maya_variant'
+mtoa_variant='$mtoa_variant'
+cp /datas/hda/build/partio/build-Linux-x86_64/maya/$maya_variant/plug-ins/Linux-x86_64/partio4Maya.so 		/s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-$maya_variant/plug-ins
+cp /datas/hda/build/partio/build-Linux-x86_64/maya/$maya_variant/scripts/*.mel 								/s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-$maya_variant/scripts
+cp /datas/hda/build/partio/build-Linux-x86_64/maya/$maya_variant/icons/*.xpm 								/s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-$maya_variant/icons
+
+cp /datas/hda/build/partio/build-Linux-x86_64/arnold/procedurals/partioGenerator.so 				/s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-$mtoa_variant/maya-$maya_variant/extensions/
+cp /datas/hda/build/partio//contrib/partio4Arnold/plugin/partioTranslator.py 						/s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-$mtoa_variant/maya-$maya_variant/extensions/
+cp /datas/hda/build/partio/build-Linux-x86_64/extensions/partioTranslator.so 						/s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-$mtoa_variant/maya-$maya_variant/extensions/
+cp /datas/hda/build/partio/build-Linux-x86_64/arnold/procedurals/partioGenerator.so 				/s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-$mtoa_variant/maya-$maya_variant/procedurals/
+
+
+
+
 if [ "$build_partio_arnold" == 1 ]; then
 cmake .. \
 -DCMAKE_BUILD_TYPE=$build_type \
@@ -108,12 +121,20 @@ make -j12
 make install
 fi
 
-# cp /s/apps/users/hda/build/partio/build-Linux-x86_64/maya/2016/plug-ins/Linux-x86_64/partio4Maya.so /s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-2016/plug-ins
 
 
-#cp /datas/hda/build/partio/build-Linux-x86_64/maya/2016/plug-ins/Linux-x86_64/partio4Maya.so /s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-2016/plug-ins
-#cp /datas/hda/build/partio/build-Linux-x86_64/arnold/procedurals/partioGenerator.so /s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-2.0.1/maya-2016/extensions/
-#cp ./contrib/partio4Arnold/plugin/partioTranslator.py /s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-2.0.1/maya-2016/extensions/
+maya_variant='2016'
+mtoa_variant='2.0.1'
+cp -v /datas/hda/build/partio/build-Linux-x86_64/maya/$maya_variant/plug-ins/Linux-x86_64/partio4Maya.so 		/s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-$maya_variant/plug-ins
+#cp -v /datas/hda/build/partio/build-Linux-x86_64/maya/$maya_variant/scripts/*.mel 								/s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-$maya_variant/scripts
+cp -v /datas/hda/build/partio/contrib/partio4Maya/scripts/*.mel 												/s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-$maya_variant/scripts
+#cp -v /datas/hda/build/partio/build-Linux-x86_64/maya/$maya_variant/icons/*.xpm 								/s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-$maya_variant/icons
+cp -v /datas/hda/build/partio/contrib/partio4Maya/icons/*.xpm 													/s/apps/users/hda/packages/cgDev/partioMaya/dev/platform-linux/maya-$maya_variant/icons
+
+cp -v /datas/hda/build/partio/build-Linux-x86_64/arnold/procedurals/partioGenerator.so 				/s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-$mtoa_variant/maya-$maya_variant/extensions/
+cp -v /datas/hda/build/partio//contrib/partio4Arnold/plugin/partioTranslator.py 						/s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-$mtoa_variant/maya-$maya_variant/extensions/
+cp -v /datas/hda/build/partio/build-Linux-x86_64/extensions/partioTranslator.so 						/s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-$mtoa_variant/maya-$maya_variant/extensions/
+cp -v /datas/hda/build/partio/build-Linux-x86_64/arnold/procedurals/partioGenerator.so 				/s/apps/users/hda/packages/cgDev/partioArnold/dev/platform-linux/mtoa-$mtoa_variant/maya-$maya_variant/procedurals/
 
 
 
