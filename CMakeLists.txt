@@ -70,7 +70,9 @@ IF(WIN32)
     set(CMAKE_MODULE_PATH ${PARTIO_HOME}/cmake)
 ELSE(WIN32)
     ADD_DEFINITIONS (-Wextra -Wno-unused-parameter)
-    SET( CMAKE_CXX_FLAGS "-fPIC")
+    #SET( CMAKE_CXX_FLAGS "-fPIC")                  
+    SET( CMAKE_CXX_FLAGS "-fPIC -std=c++11")  # add c++11 for Maya 2018
+    
 ENDIF(WIN32)
 
 # to switch between rez and local install paths 
